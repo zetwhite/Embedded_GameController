@@ -1,3 +1,13 @@
+# IAR Embedded Workbench settings 
+GameController/*.dep
+GameController/*.ewd
+GameController/*.ewp 
+GameController/*.ewt
+GameController/*.eww
+GameController/settings/*
+GameController/Debug/*
+
+
 # Prerequisites
 *.d
 
