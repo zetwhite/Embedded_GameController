@@ -1,86 +1,76 @@
+#ifndef _INIT_H_ 
+#define _INIT_H_
+#include "util.h"
+
 #include <stdio.h>
 #include <windows.h>
 #include <conio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdlib.h> 
 
-#define MAP_X 3
-#define MAP_Y 2
-#define MAP_WIDTH 35
-#define MAP_HEIGHT 20
-#define ESC 27
-
-void gotoxy(int x, int y, char* s)
-{
-    COORD pos = { 2 * x, y }; //x값을 2x로 변경
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-    printf("%s", s); //좌표값에 바로 문자열을 입력할 수 있도록 printf 함수 추가
-}
-
-void draw_map(void)
-{ //맵 테두리 그리는 함수
-    int i;
-
-    for (i = 0; i < MAP_WIDTH; i++)
-    {
-
-        gotoxy(MAP_X + i, MAP_Y, "가"); // "■" etc
-    }
-
-    for (i = MAP_Y + 1; i < MAP_Y + MAP_HEIGHT - 1; i++)
-    {
-
-        gotoxy(MAP_X, i, "■");
-        gotoxy(MAP_X + MAP_WIDTH - 1, i, "■");
-    }
-
-    for (i = 0; i < MAP_WIDTH; i++)
-    {
-        gotoxy(MAP_X + i, MAP_Y + MAP_HEIGHT - 1, "■");
-    }
-}
-
-void title(void)
-{ // 첫 화면 - 프로그램 소개
+void load_initpage(void) { 
     while (_kbhit())
-        _getch(); //버퍼에 있는 키값을 버림
+        _getch(); 
 
     draw_map(); 
-    gotoxy(MAP_X + 2, MAP_Y + 3, "* Welcome to C programming class");
-    gotoxy(MAP_X + 2, MAP_Y + 6, "* Snake game instructions");
-    gotoxy(MAP_X + 2, MAP_Y + 7, "1. Use arrow keys to move the snake");
-    gotoxy(MAP_X + 2, MAP_Y + 8, "2. You will be provided foods at the several coordinates of the screen which you have to eat");
-    gotoxy(MAP_X + 2, MAP_Y + 9, "3. Everytime you eat a food, the length of the snake will be increased by 1 element and thus the score");
-    gotoxy(MAP_X + 2, MAP_Y + 10, "4. Here you are provided with three lives");
-    gotoxy(MAP_X + 2, MAP_Y + 11, "5. Your life will decrease as you hit the wall or snake's body");
-    gotoxy(MAP_X + 2, MAP_Y + 12, "6. You can pause the game in its middle by pressing P key");
-    gotoxy(MAP_X + 2, MAP_Y + 13, "7. To continue the paused game, press any other key once again");
-    gotoxy(MAP_X + 2, MAP_Y + 14, "8. If you want to exit, press ESC");
 
-    gotoxy(MAP_X + 2, MAP_Y + 17, " PRESS ANY KEY TO START :   ");
-    gotoxy(MAP_X + 2, MAP_Y + 18, " ◇ ←,→,↑,↓ : Move      ");
-    gotoxy(MAP_X + 2, MAP_Y + 19, " ◇ P : Pause               ");
-    gotoxy(MAP_X + 2, MAP_Y + 20, " ◇ ESC : Quit              ");
+    /* position test
+    char oneline[MAP_WIDTH - 2]; 
+    for(int i = 0; i < MAP_WIDTH; i++){
+        char c = (char)(i + 48); 
+        gotoxy(MAP_X + i, MAP_Y + 1, &c); 
+    }*/ 
 
-    while (1)
-    {
+    char* welcome = "*  Welcome to our lovely game *"; 
+    char* choice1 = "[1] Snake Game"; 
+    char* choice2 = "[2] Obstacle Avoiding Game"; 
+    char* choice3 = "[3] Settings";
+    char* move_cursor  = "move cursor(▶) using JOYSTICK";  
+    char* press_button = "press WHITE BUTTON to start game";
+
+    int option_pos_x = get_start_point(choice2);  
+    int option_pos_ys[3] = {6, 9, 12};  
+
+    gotoxy( MAP_X + get_start_point(welcome),       MAP_Y + 3,                  welcome); 
+    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[0],   choice1);
+    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[1],   choice2);
+    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[2],   choice3);
+    gotoxy( MAP_X + get_start_point(move_cursor),   MAP_Y + 15,                 move_cursor);
+    gotoxy( MAP_X + get_start_point(press_button),  MAP_Y + 16,                 press_button); 
+
+    int cursor_index = 0; 
+    int old_cursor_index = -1; 
+    while(1){
         char key; 
-        if (_kbhit())
-        { //키입력받음
-            key = _getch();
-            if (key == ESC)
-            {
-                system("cls"); //Clear screen
-                exit(0);       //프로그램 종료
+        if(_kbhit()){
+            key = _getch(); 
+            if(key == K_UP){
+                //printf("Key UP pushed\n"); 
+                old_cursor_index = cursor_index; 
+                cursor_index -= 1; 
             }
-            else
-                break; //아니면 계속 진행
+            else if(key == K_DOWN){
+                //printf("Key Down pushed\n"); 
+                old_cursor_index = cursor_index; 
+                cursor_index += 1;
+            }
+            if( cursor_index < 0 ) 
+                cursor_index += 3; 
+            if( cursor_index >= 3) 
+                cursor_index %= 3; 
+            
+            if(old_cursor_index != -1){
+                gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[old_cursor_index] , "    "); 
+            }
         }
+        gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[cursor_index] , "▶▶"); 
+        Sleep(400);
+        gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[cursor_index] , "    "); 
+        Sleep(400);
 
-        gotoxy(MAP_X + 2, MAP_Y + 17, " PRESS ANY KEY TO START :   ");
-        Sleep(500);
-        gotoxy(MAP_X + 2, MAP_Y + 17, "                            ");
-        Sleep(500);
+        fflush(stdin); 
     }
-
 }
+
+#endif /*end _INIT_H_*/ 
