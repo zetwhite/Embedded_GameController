@@ -1,12 +1,16 @@
 
-main.exe : main.o util.o 
-	gcc -o main.exe main.o util.o 
+CFALGS = -std=c++11 -Wall -pedantic
 
-main.o : main.c util.o 
-	gcc -c -o main.o main.c 
+bin/main: bin/main.o bin/util.o 
+	g++ -g -o bin/main bin/main.o bin/util.o $(CFLAGS) -lncurses
 
-util.o : util.c util.h 
-	gcc -c -o util.o util.c
+bin/main.o: main.cpp init_page.h
+	mkdir -p bin	
+	g++ -g -c -o bin/main.o main.cpp $(CFLAGS) 
+
+bin/util.o: util.cpp util.h
+	mkdir -p bin	
+	g++ -g -c -o bin/util.o util.cpp $(CFLAGS) 
 
 clean : 
-	del *.o main.exe
+	rm bin/* 

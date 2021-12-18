@@ -1,76 +1,80 @@
 #ifndef _INIT_H_ 
 #define _INIT_H_
 #include "util.h"
+#include <string> 
+#include <algorithm>
+#include <unistd.h> 
 
-#include <stdio.h>
-#include <windows.h>
-#include <conio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdlib.h> 
+using namespace std; 
 
-void load_initpage(void) { 
-    while (_kbhit())
-        _getch(); 
+extern WINDOW* wnd; 
 
-    draw_map(); 
+int init_page() {
 
-    /* position test
-    char oneline[MAP_WIDTH - 2]; 
-    for(int i = 0; i < MAP_WIDTH; i++){
-        char c = (char)(i + 48); 
-        gotoxy(MAP_X + i, MAP_Y + 1, &c); 
-    }*/ 
+    int max_y, max_x; 
+    getmaxyx(wnd, max_y, max_x); 
 
-    char* welcome = "*  Welcome to our lovely game *"; 
-    char* choice1 = "[1] Snake Game"; 
-    char* choice2 = "[2] Obstacle Avoiding Game"; 
-    char* choice3 = "[3] Settings";
-    char* move_cursor  = "move cursor(▶) using JOYSTICK";  
-    char* press_button = "press WHITE BUTTON to start game";
+    string welcome = "<< welcome to our lovely game >>"; 
+    string choices[3] = {
+        "[1] Snake Game", 
+        "[2] Obstacle Avoiding Game", 
+        "[3] Settings"
+    }; 
+    string blanck  = "                                 "; 
+    mvaddstr(max_y / 5, (max_x - welcome.length())/2, welcome.c_str()); 
+    
+    int choice_y[3] = {max_y / 5 + 3, max_y / 5 + 6, max_y / 5 + 9};; 
+    int choice_x = (max_x - choices[1].length()) / 2; 
+    mvaddstr(choice_y[0], choice_x, choices[0].c_str());
+    mvaddstr(choice_y[1], choice_x, choices[1].c_str()); 
+    mvaddstr(choice_y[2], choice_x, choices[2].c_str());    
 
-    int option_pos_x = get_start_point(choice2);  
-    int option_pos_ys[3] = {6, 9, 12};  
+    bool exit_requested = false;
 
-    gotoxy( MAP_X + get_start_point(welcome),       MAP_Y + 3,                  welcome); 
-    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[0],   choice1);
-    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[1],   choice2);
-    gotoxy( MAP_X + option_pos_x,                   MAP_Y + option_pos_ys[2],   choice3);
-    gotoxy( MAP_X + get_start_point(move_cursor),   MAP_Y + 15,                 move_cursor);
-    gotoxy( MAP_X + get_start_point(press_button),  MAP_Y + 16,                 press_button); 
-
-    int cursor_index = 0; 
-    int old_cursor_index = -1; 
-    while(1){
-        char key; 
-        if(_kbhit()){
-            key = _getch(); 
-            if(key == K_UP){
-                //printf("Key UP pushed\n"); 
-                old_cursor_index = cursor_index; 
-                cursor_index -= 1; 
-            }
-            else if(key == K_DOWN){
-                //printf("Key Down pushed\n"); 
-                old_cursor_index = cursor_index; 
-                cursor_index += 1;
-            }
-            if( cursor_index < 0 ) 
-                cursor_index += 3; 
-            if( cursor_index >= 3) 
-                cursor_index %= 3; 
-            
-            if(old_cursor_index != -1){
-                gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[old_cursor_index] , "    "); 
-            }
+    pair<int,int> arrow_position = {0, choice_x - 2};  
+    //chtype arrow_display = ACS_RARROW; 
+    string arrow_display = ">>"; 
+    mvaddstr(choice_y[arrow_position.first], choice_x - 3, arrow_display.c_str()); 
+    
+    refresh(); 
+    int result = 0; 
+    bool result_choosen = false; 
+    char in_char; 
+    while(1) {
+        in_char = wgetch(wnd); 
+        mvaddstr(choice_y[arrow_position.first], choice_x - 3, "   "); 
+    
+        switch(in_char) {
+            case 'a':
+                arrow_position.first -= 1; 
+                break;
+            case 's':
+                arrow_position.first += 1; 
+                break; 
+            case 'd' : 
+                result_choosen = true; 
+                result = arrow_position.first + 1; 
+                break; 
+            default:
+                break;
         }
-        gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[cursor_index] , "▶▶"); 
-        Sleep(400);
-        gotoxy( MAP_X + option_pos_x - 3, MAP_Y + option_pos_ys[cursor_index] , "    "); 
-        Sleep(400);
+        if(arrow_position.first < 0) 
+            arrow_position.first += 3; 
+        if(arrow_position.first >= 3)
+            arrow_position.first %= 3;
+    
+        if(result_choosen)
+            return result; 
 
-        fflush(stdin); 
-    }
+        mvaddstr(choice_y[arrow_position.first], choice_x, blanck.c_str());
+        refresh(); 
+        usleep(100000); // 10 ms
+        mvaddstr(choice_y[arrow_position.first], choice_x, choices[arrow_position.first].c_str());
+        mvaddstr(choice_y[arrow_position.first], choice_x - 3, arrow_display.c_str()); 
+        refresh(); 
+        usleep(100000); // 10 ms
+    }; 
 }
+
 
 #endif /*end _INIT_H_*/ 
