@@ -3,6 +3,8 @@
 #include "util.h"
 #include "init_page.h"
 #include "SnakeGame/snakeGame.h"
+#include "ObstaclesGame/ObstaclesGame.h"
+#include "ObstaclesGame/Positions.h"
 
 int main(int argv, char** argc) {
     int init_status = init();
@@ -12,6 +14,9 @@ int main(int argv, char** argc) {
         nxt_page_index = init_page();
     if( nxt_page_index == 1 ) {
         SnakeGame();
+    }
+    if (nxt_page_index == 2) {
+        ObstaclesGame();
     }
     close();
     printf("result is %d\n", nxt_page_index); 
