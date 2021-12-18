@@ -10,7 +10,7 @@ using namespace std;
 
 WINDOW* wnd;
 
-int init() {
+int init( void ) {
     wnd = initscr();
     cbreak();
     noecho();
@@ -42,6 +42,21 @@ int init() {
     return 0;
 }
 
-void close() {
+void close( void ) {
     endwin();
+}
+
+void drawBorder( WINDOW *win ) {
+    wborder( win, 0, 0, 0, 0, 0, 0, 0, 0 );
+} 
+
+void clearMap( WINDOW *win ) {
+    wclear( win );
+    drawBorder( win );
+}
+
+void drawStr( WINDOW *win, int y, int x, const char *s ) {
+    mvwprintw( win, y, x, s );
+    touchwin( win );
+    wrefresh( win );
 }
