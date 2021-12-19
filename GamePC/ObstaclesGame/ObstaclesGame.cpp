@@ -5,20 +5,13 @@
 
 // cpp include
 #include <string>
+#include <random> 
 
 // user include
 #include "ObstaclesGame.h"
 #include "../util.h"
 #include "../bluetooth.h"
-#include "Positions.h"
-
-#define TRUE 1
-#define FALSE 0
-#define FallSpeed 20;
-#define MaxStep 100;
-
-using namespace std;
-
+#include "Positions.h"  
 WINDOW* obstacleWin;
 extern int bluetooth_sock; 
 
@@ -190,8 +183,10 @@ void CreateEnemy(void)
         if (!enemy[i].con)
         {
             //���� (x��) �������� �� ����, ����(y��)�� ���� ��ġ �׻� ��ġ
-    	    srand((unsigned)time(NULL));           
-            enemy[i].x = rand() % WIDTH;
+    	    //srand((unsigned)time(NULL));           
+            uniform_int_distribution<int> dist(0, WIDTH); 
+            random_device rd1("/dev/urandom"); 
+            enemy[i].x = dist(rd1); 
             enemy[i].y = HEIGHT - 1;
             //���� ������ �ε��� [i]�� ���� = TRUE�� ����
             enemy[i].con = TRUE;
@@ -255,7 +250,8 @@ void MovePlayer(void) {
         player.x++;
         break;
     case BUTTON_PINK:
-        item_activated != item_activated; 
+        item_activated = TRUE; 
+        printf("item is used!!!\n");
         break;
 #else 
     int key = wgetch(obstacleWin);   

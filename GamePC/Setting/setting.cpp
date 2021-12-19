@@ -63,10 +63,10 @@ void loadSettingPage( void ) {
             case JOY_RIGHT:
                 sensitiveLevel += 1; 
                 break; 
-            case BUTTON_WHITE : 
+            case BUTTON_PINK : 
                 set_middle = true; 
                 break; 
-            case BUTTON_PINK :
+            case BUTTON_WHITE :
                 // send_msg(bluetooth_sock, "S"); 
                 send_msg(bluetooth_sock, to_string(sensitiveLevel)); 
                 return; 
