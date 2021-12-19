@@ -36,24 +36,34 @@ void SnakeGame( void ) {
     drawSnakeGameIntro();
 
     while( true ) {
-        #ifdef BLUETOOTH_VER
-            key = recv_msg(bluetooth_sock)[0]; 
-        #else 
-            key = wgetch(snakeWin); 
-        #endif
-        
-        switch( key ) {
-
-        #ifdef BLUETOOTH_VER
+#ifdef BLUETOOTH_VER
+        key = recv_msg(bluetooth_sock)[0]; 
+        switch (key) {
         case BUTTON_PINK:
             return;
             break;
-        #else 
+        case ERR:
+            break;
+
+        case JOY_UP : 
+        case JOY_DOWN :
+        case JOY_LEFT :
+        case JOY_RIGHT :
+        case BUTTON_WHITE : 
+            startSnakeGame();
+            drawSnakeGameOver();
+            endSnakeGame();
+            return;
+            break;
+        default : 
+            break; 
+        }
+#else 
+        key = wgetch(snakeWin);
+        switch (key) {
         case 'q':
             return;
             break;
-        #endif
-
         case ERR:
             break;
 
@@ -64,6 +74,7 @@ void SnakeGame( void ) {
             return;
             break;
         }
+#endif
     }
 }
 
@@ -117,7 +128,7 @@ void drawSnakeGameIntro( void ) {
 	drawStr( snakeWin, 11, midx, "       arrow key    : Move      " );
 	drawStr( snakeWin, 12, midx, "       Q : Quit              " );
 	drawStr( snakeWin, 14, midx, "====== Game Controller Version =====" );
-	drawStr( snakeWin, 15, midx, "       Gyro Sensor  : Move      " );
+	drawStr( snakeWin, 15, midx, "       Gyro Sensor  : Move              " );
 	drawStr( snakeWin, 16, midx, "       white button : Quit              " );
 }
 
@@ -157,10 +168,10 @@ void startSnakeGame( void ) {
                     dir = key;
                 break;
 
-            case BUTTON_WHITE:
+            /*case BUTTON_WHITE:
                 return;
                 break;
-
+            */     
             case ERR:
             default:
                 break;
@@ -188,7 +199,7 @@ void startSnakeGame( void ) {
                 break;
             }
         #endif
-
+        usleep(500000); 
     	moveSnake(dir);
         if( bIsGameOver ) {
             return;
