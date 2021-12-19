@@ -1,7 +1,9 @@
 // c include
 #include <unistd.h>
 #include <ncurses.h>
-#include <time.h>
+#include <signal.h>
+#include <sys/time.h> 
+#include <string.h> 
 
 // cpp include
 #include <string>
@@ -26,6 +28,27 @@ int Game_speed;
 int ObsGame_score;
 int WIDTH; 
 int HEIGHT;
+
+//==== timer setter and timer handler=====
+void timer_handler(int signum){
+    item_activated = FALSE; 
+}
+
+void set_timer(){
+    struct sigaction sa; 
+    struct itimerval timer; 
+
+    memset(&sa, 0, sizeof(sa)); 
+    sa.sa_handler = &timer_handler; 
+    sigaction(SIGALRM, &sa, NULL); 
+
+    timer.it_value.tv_sec = 3;
+    timer.it_value.tv_usec = 0;
+
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timer, NULL);
+}
 
 
 void ObstaclesGame(void) {
@@ -248,6 +271,7 @@ void MovePlayer(void) {
         break;
     case BUTTON_PINK:
         item_activated = TRUE; 
+        set_timer(); 
         printf("item is used!!!\n");
         break;
 #else 
@@ -262,10 +286,9 @@ void MovePlayer(void) {
         break;
     case KEY_UP:
         item_activated = TRUE;
+        set_timer(); 
         break;
-    case KEY_DOWN:
-        item_activated = FALSE;
-        break;
+
 #endif
     case 'q':
         return;
