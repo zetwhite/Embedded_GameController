@@ -9,12 +9,9 @@
 // user include
 #include "ObstaclesGame.h"
 #include "../util.h"
+#include "../bluetooth.h"
 #include "Positions.h"
 
-
-
-#define WIDTH 50        //°¡·Î
-#define HEIGHT 20        //¼¼·Î
 #define TRUE 1
 #define FALSE 0
 #define FallSpeed 20;
@@ -23,8 +20,9 @@
 using namespace std;
 
 WINDOW* obstacleWin;
+extern int bluetooth_sock; 
 
-Enemy enemy[WIDTH];
+Enemy *enemy;
 Player player;
 
 int step = 100;
@@ -32,6 +30,8 @@ bool item_activated = FALSE;
 
 int Game_speed;
 int ObsGame_score;
+int WIDTH;
+int HEIGHT;
 
 
 void ObstaclesGame(void) {
@@ -41,12 +41,37 @@ void ObstaclesGame(void) {
     drawObstcGameIntro();
 
     while (true) {
+#ifdef BLUETOOTH_VER
+        key = recv_msg(bluetooth_sock)[0]; 
+        switch (key) {
+        
+        /*case BUTTON_PINK:
+            return;
+            break;
+        */ 
+        case ERR:
+            break;
+        
+        case JOY_UP : 
+        case JOY_DOWN :
+        case JOY_LEFT :
+        case JOY_RIGHT :
+        case BUTTON_WHITE : 
+            startObstcGame();
+            drawGameOver();
+            endObstaclesGame();
+            return;
+            break;
+        default : 
+            break; 
+        }
+    }
+#else 
         key = wgetch(obstacleWin);
         switch (key) {
         case 'q':
             return;
             break;
-
         case ERR:
             break;
 
@@ -58,6 +83,7 @@ void ObstaclesGame(void) {
             break;
         }
     }
+#endif
 }
 
 void obstcGameInit(void) {
@@ -72,16 +98,27 @@ void obstcGameInit(void) {
     keypad(obstacleWin, true);
     noecho();
 
+    getmaxyx( obstacleWin, HEIGHT, WIDTH );
+    enemy = new Enemy[WIDTH];
+
     int i;
     for (i = 0; i < WIDTH; i++)
         enemy[i].con = FALSE;
-    //ÇÃ·¹ÀÌ¾î À§Ä¡´Â Áß¾Ó
+    //ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ß¾ï¿½
     player.x = WIDTH / 2;
 }
 
 void endObstaclesGame(void) {
     nocbreak();
-    wgetch(obstacleWin);
+    #ifdef BLUETOOTH_VER
+        while(1){
+            int key = recv_msg(bluetooth_sock)[0]; 
+            if( key == BUTTON_PINK || key == BUTTON_WHITE)
+                break; 
+        }
+    #else 
+        wgetch( obstacleWin );
+    #endif
 
     wclear(obstacleWin);
     touchwin(obstacleWin);
@@ -107,62 +144,97 @@ void drawObstcGameIntro(void) {
 
     drawStr(obstacleWin, 11, midx, "       arrow key : Move      ");
     drawStr(obstacleWin, 12, midx, "       Q : Quit              ");
+
+	drawStr(obstacleWin, 14, midx, "====== Game Controller Version =====" );
+	drawStr(obstacleWin, 15, midx, "       Gyro Sensor  : Move              " );
+	drawStr(obstacleWin, 16, midx, "       white button : Quit              " );
 }
 
 void startObstcGame(void) {
     clearMap(obstacleWin);
     //bIsGameOver = false;
-    Game_speed = 500;
-    ObsGame_score = 0;
+    Game_speed = 500000;    
 
-    while (true) {
-
+#ifdef BLUETOOTH_VER 
+    int key = recv_msg(bluetooth_sock)[0]; 
+    
+    switch (key) {
+    case GYRO_LEFT:
+        player.x--;
+        break;
+    case GYRO_RIGHT:
+        player.x++;
+        break;
+    case GYRO_UP:
+        item_activated = TRUE;
+        break;
+    case GYRO_DOWN:
+        item_activated = FALSE;
+        break;
+#else 
+    int key = wgetch(obstacleWin);   
+    
+    switch (key) {
+    case KEY_LEFT:
+        player.x--;
+        break;
+    case KEY_RIGHT:
+        player.x++;
+        break;
+    case KEY_UP:
+        item_activated = TRUE;
+        break;
+    case KEY_DOWN:
+        item_activated = FALSE;
+        break;
+#endif
         CreateEnemy();
         FallEnemy();
         DelEnemy();
         MovePlayer();
         PrintGame();
-        usleep(Game_speed);
-
+        usleep(Game_speed); 
+        sleep(5);  
         if (DamagedPlayer()) {
             return;
         }
     }
 }
 
-//// ÇÇÇÒ Àûµé Ã³¸® ////
-/* Àû »ý¼º */
+//// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ////
+/* ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 void CreateEnemy(void)
 {
     int i;
     for (i = 0; i < WIDTH; i++)
     {
-        //ÇØ´ç ÀÎµ¦½º[i]¿¡ ÀûÀÌ ¾øÀ¸¸é (FALSE ÀÌ¸é ½ÇÇà)
+        //ï¿½Ø´ï¿½ ï¿½Îµï¿½ï¿½ï¿½[i]ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (FALSE ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½)
         if (!enemy[i].con)
         {
-            //°¡·Î (xÃà) ¹«ÀÛÀ§·Î Àû ÃâÇö, ¼¼·Î(yÃà)Àº ÃâÇö À§Ä¡ Ç×»ó ÀÏÄ¡
+            //ï¿½ï¿½ï¿½ï¿½ (xï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½(yï¿½ï¿½)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½×»ï¿½ ï¿½ï¿½Ä¡
+    	    srand((unsigned)time(NULL));           
             enemy[i].x = rand() % WIDTH;
             enemy[i].y = HEIGHT - 1;
-            //ÀûÀÌ ÃâÇöÇÑ ÀÎµ¦½º [i]ÀÇ »óÅÂ = TRUE·Î º¯°æ
+            //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ [i]ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ = TRUEï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             enemy[i].con = TRUE;
             return;
         }
     }
 }
-/* ÀûÀÇ ¿òÁ÷ÀÓ */
+/* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 void FallEnemy(void)
 {
     int i;
     for (i = 0; i < WIDTH; i++)
     {
-        //ÇØ´ç ÀÎµ¦½º [i]¿¡ ÀûÀÌ ÀÖÀ¸¸é (TRUE¶ó¸é) ¿òÁ÷ÀÓ ½ÇÇà
+        //ï¿½Ø´ï¿½ ï¿½Îµï¿½ï¿½ï¿½ [i]ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (TRUEï¿½ï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (enemy[i].con)
         {
             enemy[i].y--;
         }
     }
 }
-/* ÇÇÇÏ±â ¼º°øÇÑ Àû(¹Ù´Ú¿¡ ¶³¾îÁø Àû) »èÁ¦ */
+/* ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½(ï¿½Ù´Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ */
 void DelEnemy(void)
 {
     int i;
@@ -177,24 +249,40 @@ void DelEnemy(void)
         }
     }
 }
-/* ÇÃ·¹ÀÌ¾î°¡ Àû¿¡°Ô ´êÀ» °æ¿ì (ÆÐ¹è) */
+/* ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (ï¿½Ð¹ï¿½) */
 int DamagedPlayer(void)
 {
     int i;
     for (i = 0; i < WIDTH; i++)
     {
-        //ÀûÀÇ »óÅÂ°¡ TRUE && ÀûÀÇ À§Ä¡°¡ y=0 Áï ¹Ù´Ú && ÀûÀÇ xÃà À§Ä¡ = ÇÃ·¹ÀÌ¾îÀÇ xÃà À§Ä¡
+        //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â°ï¿½ TRUE && ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ y=0 ï¿½ï¿½ ï¿½Ù´ï¿½ && ï¿½ï¿½ï¿½ï¿½ xï¿½ï¿½ ï¿½ï¿½Ä¡ = ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ xï¿½ï¿½ ï¿½ï¿½Ä¡
         if ((enemy[i].con && enemy[i].y == 0) && (enemy[i].x == player.x))
             return TRUE;
     }
-    //´êÁö ¾Ê¾ÒÀ¸¸é FALSE ¹ÝÈ¯
+    //ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ FALSE ï¿½ï¿½È¯
     return FALSE;
 }
 
-//// ÇÃ·¹ÀÌ¾î Ã³¸® ////
-/* ÇÃ·¹ÀÌ¾î ÀÌµ¿ (ÁÂ/¿ì) */
+//// ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã³ï¿½ï¿½ ////
+/* ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Ìµï¿½ (ï¿½ï¿½/ï¿½ï¿½) */
 void MovePlayer(void) {
+#ifdef BLUETOOTH_VER
+    int key = recv_msg(bluetooth_sock)[0]; 
 
+    switch (key) {
+    case GYRO_LEFT:
+        player.x--;
+        break;
+    case GYRO_RIGHT:
+        player.x++;
+        break;
+    case GYRO_UP:
+        item_activated = TRUE;
+        break;
+    case GYRO_DOWN:
+        item_activated = FALSE;
+        break;
+#else 
     int key = wgetch(obstacleWin);   
 
     switch (key) {
@@ -210,7 +298,7 @@ void MovePlayer(void) {
     case KEY_DOWN:
         item_activated = FALSE;
         break;
-
+#endif
     case 'q':
         return;
         break;
@@ -220,7 +308,8 @@ void MovePlayer(void) {
         break;
     }
 
-    //À§Ä¡ ¹üÀ§ Á¦ÇÑ
+
+    //ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (player.x < 0)
         player.x = 0;
     if (player.x > WIDTH - 1)
@@ -236,18 +325,18 @@ void PrintGame(void)
     {
         if (enemy[i].con)
         {
-            //Àû À§Ä¡¿¡ Àû±º Ãâ·Â
+            //ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             drawStr(obstacleWin, HEIGHT - enemy[i].y, enemy[i].x, "!");
         }
     }
-    //ÇÃ·¹ÀÌ¾î Ãâ·Â
+    //ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½
     drawStr(obstacleWin, HEIGHT, player.x, "@");
 
     if (item_activated == TRUE) {
         drawStr(obstacleWin, HEIGHT - 1, player.x - 1, "---");
     }
 
-    //¹Ù´Ú Ãâ·Â
+    //ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½
     for (i = 0; i < WIDTH; i++)
         drawStr(obstacleWin, HEIGHT + 1, i, "#");
 }
