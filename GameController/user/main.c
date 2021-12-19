@@ -205,7 +205,7 @@ void EXTI0_IRQHandler(void) {
 
 	if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_0)) {
                   USART_SendData(USART2, '0');
-                  printf("interrupted by PE0\n");
+                  printf("JoyStick_4(PB0)\n"); 
 	}
         EXTI_ClearITPendingBit(EXTI_Line0);
 }
@@ -214,7 +214,7 @@ void EXTI2_IRQHandler(void) {
 
 	if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_2)) {
                   USART_SendData(USART2, '2');
-                  printf("interrupted by PE2\n");
+                  printf("Button1_4(PE2)\n"); 
 	}
         EXTI_ClearITPendingBit(EXTI_Line2);
 }
@@ -223,7 +223,7 @@ void EXTI3_IRQHandler(void) {
 
 	if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_3)) {
                   USART_SendData(USART2, '3');
-                  printf("interrupted by PE3\n");
+                  printf("Button2_4(PE3)\n"); 
 	}
         EXTI_ClearITPendingBit(EXTI_Line3);
 }
@@ -233,14 +233,14 @@ void EXTI9_5_IRQHandler(void) {
     if (EXTI_GetITStatus(EXTI_Line6) != RESET) {
         if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6)) {
                   USART_SendData(USART2, '6');
-                  printf("interrupted by PB6\n"); 
+                  printf("JoyStick_1(PB6)\n"); 
           }
           EXTI_ClearITPendingBit(EXTI_Line6);
     }
     else if (EXTI_GetITStatus(EXTI_Line5) != RESET) {
           if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5)) {
                   USART_SendData(USART2, '5');
-                  printf("interrupted by PB5\n"); 
+                  printf("JoyStick_2(PB5)\n"); 
 
           }
           EXTI_ClearITPendingBit(EXTI_Line5);
@@ -248,7 +248,7 @@ void EXTI9_5_IRQHandler(void) {
     else if (EXTI_GetITStatus(EXTI_Line9) != RESET) {
           if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9)) {
                   USART_SendData(USART2, '9');
-                  printf("interrupted by PB9\n"); 
+                  printf("JoyStick_3(PB9)\n"); 
           }
           EXTI_ClearITPendingBit(EXTI_Line9);
     }
