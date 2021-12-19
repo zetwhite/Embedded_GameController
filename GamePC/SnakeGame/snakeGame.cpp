@@ -9,10 +9,12 @@
 // user include
 #include "snakeGame.h"
 #include "../util.h"
+#include "../bluetooth.h"
 
 using namespace std;
 
 WINDOW *snakeWin;
+extern int bluetooth_sock; 
 
 const char *SNAKE_HEAD = "@";
 const char *SNAKE_BODY = "*";
@@ -34,11 +36,23 @@ void SnakeGame( void ) {
     drawSnakeGameIntro();
 
     while( true ) {
-        key = wgetch( snakeWin );
+        #ifdef BLUETOOTH_VER
+            key = recv_msg(bluetooth_sock)[0]; 
+        #else 
+            key = wgetch(snakeWin); 
+        #endif
+        
         switch( key ) {
+
+        #ifdef BLUETOOTH_VER
+        case BUTTON_PINK:
+            return;
+            break;
+        #else 
         case 'q':
             return;
             break;
+        #endif
 
         case ERR:
             break;
@@ -68,7 +82,15 @@ void snakeGameInit( void ) {
 
 void endSnakeGame( void ) {
     nocbreak();
-    wgetch( snakeWin );
+    #ifdef BLUETOOTH_VER
+        while(1){
+            int key = recv_msg(bluetooth_sock)[0]; 
+            if( key == BUTTON_PINK || key == BUTTON_WHITE)
+                break; 
+        }
+    #else 
+        wgetch( snakeWin );
+    #endif
 
     wclear( snakeWin );
     touchwin( snakeWin );
@@ -92,8 +114,11 @@ void drawSnakeGameIntro( void ) {
 
 	drawStr( snakeWin, 9, midx,  " < PRESS ANY KEY TO START > " );
 
-	drawStr( snakeWin, 11, midx, "       arrow key : Move      " );
+	drawStr( snakeWin, 11, midx, "       arrow key    : Move      " );
 	drawStr( snakeWin, 12, midx, "       Q : Quit              " );
+	drawStr( snakeWin, 14, midx, "====== Game Controller Version =====" );
+	drawStr( snakeWin, 15, midx, "       Gyro Sensor  : Move      " );
+	drawStr( snakeWin, 16, midx, "       white button : Quit              " );
 }
 
 void startSnakeGame( void ) {
@@ -102,7 +127,11 @@ void startSnakeGame( void ) {
 
     clearMap( snakeWin );
     bIsGameOver = false;
-    dir = KEY_LEFT;
+    #ifdef BLUETOOTH_VER
+        dir = GYRO_LEFT; 
+    #else 
+        dir = KEY_LEFT;
+    #endif
     speed = 500;
     score = 0;
     length = 3;
@@ -115,27 +144,51 @@ void startSnakeGame( void ) {
     makeFood();
 
     while( true ) {
-        key = wgetch( snakeWin );
-        usleep( speed );
+        #ifdef BLUETOOTH_VER
+            key = recv_msg(bluetooth_sock)[0];  
+            usleep( speed);
+            switch ( key ) {
+            case GYRO_LEFT:
+            case GYRO_RIGHT:
+            case GYRO_UP:
+            case GYRO_DOWN:
+                if ((dir == GYRO_LEFT && key != GYRO_RIGHT) || (dir == GYRO_RIGHT && key != GYRO_LEFT) || (dir == GYRO_UP && key != GYRO_DOWN) ||
+                    (dir == GYRO_DOWN && key != GYRO_UP))
+                    dir = key;
+                break;
 
-    	switch ( key ) {
-    	case KEY_LEFT:
-    	case KEY_RIGHT:
-    	case KEY_UP:
-    	case KEY_DOWN:
-        	if ((dir == KEY_LEFT && key != KEY_RIGHT) || (dir == KEY_RIGHT && key != KEY_LEFT) || (dir == KEY_UP && key != KEY_DOWN) ||
-            	(dir == KEY_DOWN && key != KEY_UP))
-            	dir = key;
-        	break;
+            case BUTTON_WHITE:
+                return;
+                break;
 
-    	case 'q':
-        	return;
-            break;
+            case ERR:
+            default:
+                break;
+            }
+        #else 
+            key = wgetch( snakeWin );
+            usleep( speed );
 
-        case ERR:
-        default:
-            break;
-    	}
+            switch ( key ) {
+            case KEY_LEFT:
+            case KEY_RIGHT:
+            case KEY_UP:
+            case KEY_DOWN:
+                if ((dir == KEY_LEFT && key != KEY_RIGHT) || (dir == KEY_RIGHT && key != KEY_LEFT) || (dir == KEY_UP && key != KEY_DOWN) ||
+                    (dir == KEY_DOWN && key != KEY_UP))
+                    dir = key;
+                break;
+
+            case 'q':
+                return;
+                break;
+
+            case ERR:
+            default:
+                break;
+            }
+        #endif
+
     	moveSnake(dir);
         if( bIsGameOver ) {
             return;
@@ -201,10 +254,17 @@ void moveSnake( int dir ) {
 	}
 
     drawStr( snakeWin, body_y[0], body_x[0], SNAKE_BODY );
-	if ( dir == KEY_LEFT )  --body_x[0];
-	if ( dir == KEY_RIGHT ) ++body_x[0];
-	if ( dir == KEY_UP )    --body_y[0];
-	if ( dir == KEY_DOWN )  ++body_y[0];
+    #ifdef BLUETOOTH_VER
+        if ( dir == GYRO_LEFT )  --body_x[0];
+        if ( dir == GYRO_RIGHT ) ++body_x[0];
+        if ( dir == GYRO_UP )    --body_y[0];
+        if ( dir == GYRO_DOWN )  ++body_y[0];
+    #else 
+        if ( dir == KEY_LEFT )  --body_x[0];
+        if ( dir == KEY_RIGHT ) ++body_x[0];
+        if ( dir == KEY_UP )    --body_y[0];
+        if ( dir == KEY_DOWN )  ++body_y[0];
+    #endif
 	drawStr( snakeWin, body_y[0], body_x[0], SNAKE_HEAD );
 }
 
@@ -222,5 +282,5 @@ void drawSnakeGameOver( void ) {
 	drawStr( snakeWin, 6, midx,  "|         GAME OVER        |" );
 	drawStr( snakeWin, 7, midx,  "+--------------------------+" );
 
-	drawStr( snakeWin, 9, midx,  " <  PRESS ANY KEY TO END  > " );
+	drawStr( snakeWin, 9, midx,  " <  PRESS ANY KEY(BUTTON) TO END  > " );
 }
