@@ -140,7 +140,7 @@ void startSnakeGame( void ) {
     bIsGameOver = false;
     #ifdef BLUETOOTH_VER
         dir = GYRO_LEFT; 
-        speed = 500000;
+        speed = 100000;
     #else 
         dir = KEY_LEFT;
         speed = 500; 

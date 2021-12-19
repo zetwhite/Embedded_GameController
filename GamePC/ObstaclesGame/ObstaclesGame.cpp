@@ -147,8 +147,9 @@ void drawObstcGameIntro(void) {
     drawStr(obstacleWin, 12, midx, "       Q : Quit              ");
 
 	drawStr(obstacleWin, 14, midx, "====== Game Controller Version =====" );
-	drawStr(obstacleWin, 15, midx, "       Gyro Sensor  : Move              " );
+	drawStr(obstacleWin, 15, midx, "       Gyro Sensor  : Move(Left / Right)" );
 	drawStr(obstacleWin, 16, midx, "       white button : Quit              " );
+    drawStr(obstacleWin, 17, midx, "       pink button  : using Item        " ); 
 }
 
 
@@ -156,7 +157,7 @@ void startObstcGame(void) {
     clearMap(obstacleWin);
     //bIsGameOver = false;
     #ifdef BLUETOOTH_VER
-    Game_speed = 500000;
+    Game_speed = 100000;
     #else 
     Game_speed = 500;
     #endif 
@@ -253,11 +254,8 @@ void MovePlayer(void) {
     case GYRO_RIGHT:
         player.x++;
         break;
-    case GYRO_UP:
-        item_activated = TRUE;
-        break;
-    case GYRO_DOWN:
-        item_activated = FALSE;
+    case BUTTON_PINK:
+        item_activated != item_activated; 
         break;
 #else 
     int key = wgetch(obstacleWin);   
