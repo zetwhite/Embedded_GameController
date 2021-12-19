@@ -14,6 +14,7 @@
 using namespace std;
 
 WINDOW *snakeWin;
+WINDOW *scoreWin;
 extern int bluetooth_sock; 
 
 const char *SNAKE_HEAD = "@";
@@ -81,7 +82,12 @@ void SnakeGame( void ) {
 void snakeGameInit( void ) {
     int y, x;
     getmaxyx( stdscr, y, x );
-    snakeWin = newwin( y, x, 0, 0 );
+    snakeWin = newwin( 20, 50,  0, 0 );
+    scoreWin = newwin(  3, 50, 20, 0 );
+
+    wclear( stdscr );
+    touchwin( stdscr );
+    wrefresh( stdscr );
     
     drawBorder( snakeWin );
 
@@ -125,11 +131,11 @@ void drawSnakeGameIntro( void ) {
 
 	drawStr( snakeWin, 9, midx,  " < PRESS ANY KEY TO START > " );
 
-	drawStr( snakeWin, 11, midx, "       arrow key    : Move      " );
-	drawStr( snakeWin, 12, midx, "       Q : Quit              " );
-	drawStr( snakeWin, 14, midx, "====== Game Controller Version =====" );
-	drawStr( snakeWin, 15, midx, "       Gyro Sensor  : Move              " );
-	drawStr( snakeWin, 16, midx, "       white button : Quit              " );
+	drawStr( snakeWin, 11, midx, "       arrow key    : Move  " );
+	drawStr( snakeWin, 12, midx, "       Q : Quit             " );
+	drawStrMid( snakeWin, 14, "====== Game Controller Version =====" );
+	drawStrMid( snakeWin, 15, "Gyro Sensor  : Move" );
+	drawStrMid( snakeWin, 16, "white button : Quit" );
 }
 
 void startSnakeGame( void ) {
@@ -137,15 +143,17 @@ void startSnakeGame( void ) {
     int key;
 
     clearMap( snakeWin );
+    clearMap( scoreWin );
     bIsGameOver = false;
     #ifdef BLUETOOTH_VER
         dir = GYRO_LEFT; 
-        speed = 100000;
+        speed = 200000;
     #else 
         dir = KEY_LEFT;
-        speed = 500; 
+        speed = 200000; 
     #endif
     score = 0;
+    updateScore();
     length = 3;
     for( int i=0; i<length; i++ ) {
         body_x[i] = getmaxx( snakeWin ) / 2 + i; 
@@ -158,7 +166,7 @@ void startSnakeGame( void ) {
     while( true ) {
         #ifdef BLUETOOTH_VER
             key = recv_msg(bluetooth_sock)[0];  
-            usleep( speed);
+            usleep( speed );
             switch ( key ) {
             case GYRO_LEFT:
             case GYRO_RIGHT:
@@ -230,7 +238,7 @@ void makeFood( void ) {
             continue;
 
     	drawStr( snakeWin, food_y, food_x, FOOD ); 
-    	speed -= 3;
+    	speed -= 10000;
     	break;
 	}
 }
@@ -238,7 +246,8 @@ void makeFood( void ) {
 void moveSnake( int dir ) {
 
 	if ( body_x[0] == food_x && body_y[0] == food_y ) { 
-    	score += 1; 
+    	score += 100;
+        updateScore();
     	makeFood(); 
     	length ++; 
     	body_x[length - 1] = body_x[length - 2]; 
@@ -279,19 +288,20 @@ void moveSnake( int dir ) {
 	drawStr( snakeWin, body_y[0], body_x[0], SNAKE_HEAD );
 }
 
+void updateScore( void ) {
+    string s = "SCORE : " + to_string( score );
+    drawStr( scoreWin, 1, 2,  s.c_str() );
+}
+
 void drawSnakeGameOver( void ) {
     int y, x;
 
     clearMap( snakeWin );
     getmaxyx( snakeWin, y, x );
 
-    string introStr =            "----------------------------";
-    int introLen = introStr.size();
-    int midx = x/2 - ( introLen/2 );
-
-	drawStr( snakeWin, 5, midx,  "+--------------------------+" );
-	drawStr( snakeWin, 6, midx,  "|         GAME OVER        |" );
-	drawStr( snakeWin, 7, midx,  "+--------------------------+" );
-
-	drawStr( snakeWin, 9, midx,  " <  PRESS ANY KEY(BUTTON) TO END  > " );
+	drawStrMid( snakeWin, 5,  "+--------------------------+" );
+	drawStrMid( snakeWin, 6,  "|         GAME OVER        |" );
+	drawStrMid( snakeWin, 7,  "+--------------------------+" );
+    drawStrMid( snakeWin, 9,  "SCORE : " + to_string( score ) );
+	drawStrMid( snakeWin, 11, " <  PRESS ANY KEY(BUTTON) TO END  > " );
 }
