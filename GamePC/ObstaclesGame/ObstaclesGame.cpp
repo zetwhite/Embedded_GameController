@@ -45,10 +45,10 @@ void ObstaclesGame(void) {
         key = recv_msg(bluetooth_sock)[0]; 
         switch (key) {
         
-        /*case BUTTON_PINK:
+        case BUTTON_WHITE:
             return;
             break;
-        */ 
+         
         case ERR:
             break;
         
@@ -56,7 +56,7 @@ void ObstaclesGame(void) {
         case JOY_DOWN :
         case JOY_LEFT :
         case JOY_RIGHT :
-        case BUTTON_WHITE : 
+        case BUTTON_PINK : 
             startObstcGame();
             drawGameOver();
             endObstaclesGame();

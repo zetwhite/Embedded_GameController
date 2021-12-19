@@ -39,7 +39,7 @@ void SnakeGame( void ) {
 #ifdef BLUETOOTH_VER
         key = recv_msg(bluetooth_sock)[0]; 
         switch (key) {
-        case BUTTON_PINK:
+        case BUTTON_WHITE:
             return;
             break;
         case ERR:
@@ -49,7 +49,7 @@ void SnakeGame( void ) {
         case JOY_DOWN :
         case JOY_LEFT :
         case JOY_RIGHT :
-        case BUTTON_WHITE : 
+        case BUTTON_PINK : 
             startSnakeGame();
             drawSnakeGameOver();
             endSnakeGame();
@@ -169,10 +169,10 @@ void startSnakeGame( void ) {
                     dir = key;
                 break;
 
-            /*case BUTTON_WHITE:
+            case BUTTON_WHITE:
                 return;
                 break;
-            */     
+                 
             case ERR:
             default:
                 break;
