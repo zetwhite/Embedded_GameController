@@ -1,6 +1,7 @@
 #ifndef _INIT_H_ 
 #define _INIT_H_
 #include "util.h"
+#include "bluetooth.h"
 #include <string> 
 #include <algorithm>
 #include <unistd.h> 
@@ -8,6 +9,7 @@
 using namespace std; 
 
 extern WINDOW* wnd; 
+extern int bluetooth_sock; 
 
 int init_page() {
 
@@ -32,7 +34,6 @@ int init_page() {
     bool exit_requested = false;
 
     pair<int,int> arrow_position = {0, choice_x - 2};  
-    //chtype arrow_display = ACS_RARROW; 
     string arrow_display = ">>"; 
     mvaddstr(choice_y[arrow_position.first], choice_x - 3, arrow_display.c_str()); 
     
@@ -41,9 +42,30 @@ int init_page() {
     bool result_choosen = false; 
     char in_char; 
     while(1) {
-        in_char = wgetch(wnd); 
+        #ifdef BLUETOOTH_VER
+            in_char = recv_msg(bluetooth_sock)[0]; 
+        #else 
+            in_char = wgetch(wnd); 
+        #endif
+
         mvaddstr(choice_y[arrow_position.first], choice_x - 3, "   "); 
-    
+
+        #ifdef BLUETOOTH_VER    
+        switch(in_char) {
+            case JOY_UP:
+                arrow_position.first -= 1; 
+                break;
+            case JOY_DOWN:
+                arrow_position.first += 1; 
+                break; 
+            case BUTTON_WHITE : 
+                result_choosen = true; 
+                result = arrow_position.first + 1; 
+                break; 
+            default:
+                break;
+        }
+        #else
         switch(in_char) {
             case 'a':
                 arrow_position.first -= 1; 
@@ -58,6 +80,7 @@ int init_page() {
             default:
                 break;
         }
+        #endif
         if(arrow_position.first < 0) 
             arrow_position.first += 3; 
         if(arrow_position.first >= 3)

@@ -2,11 +2,22 @@
 #include <string>
 #include "util.h"
 #include "init_page.h"
+#include "bluetooth.h"
 #include "SnakeGame/snakeGame.h"
 #include "ObstaclesGame/ObstaclesGame.h"
 #include "ObstaclesGame/Positions.h"
 
+int bluetooth_sock; 
+
 int main(int argv, char** argc) {
+    #ifdef BLUETOOTH_VER
+        if(connect_board(bluetooth_sock, "00:18:9A:24:DE:D1") < 0){ 
+            printf("fail to connect game controller...\n"); 
+            printf("check your bluetooth env\n"); 
+            exit(-1);  
+        }
+    #endif 
+
     int init_status = init();
     int nxt_page_index = 0; 
 
