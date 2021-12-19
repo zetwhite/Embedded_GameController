@@ -3,9 +3,11 @@
 #include "util.h"
 #include "init_page.h"
 #include "bluetooth.h"
+
 #include "SnakeGame/snakeGame.h"
 #include "ObstaclesGame/ObstaclesGame.h"
 #include "ObstaclesGame/Positions.h"
+#include "Setting/setting.h"
 
 int bluetooth_sock; 
 
@@ -28,6 +30,9 @@ int main(int argv, char** argc) {
     }
     if (nxt_page_index == 2) {
         ObstaclesGame();
+    }
+    if (nxt_page_index == 3) {
+        loadSettingPage(); 
     }
     close();
     printf("result is %d\n", nxt_page_index); 

@@ -1,8 +1,8 @@
 
 CFALGS = -std=c++11 -Wall -pedantic
 
-bin/main: bin/main.o bin/util.o bin/snakeGame.o bin/ObstaclesGame.o bin/bluetooth.o 
-	g++ -g -o bin/main bin/main.o bin/util.o bin/snakeGame.o bin/ObstaclesGame.o bin/bluetooth.o  $(CFLAGS) -lncurses -lbluetooth
+bin/main: bin/main.o bin/util.o bin/snakeGame.o bin/ObstaclesGame.o bin/bluetooth.o bin/setting.o
+	g++ -g -o bin/main bin/main.o bin/util.o bin/snakeGame.o bin/ObstaclesGame.o bin/bluetooth.o bin/setting.o $(CFLAGS) -lncurses -lbluetooth
 
 bin/main.o: main.cpp init_page.h
 	mkdir -p bin	
@@ -23,6 +23,11 @@ bin/snakeGame.o: SnakeGame/snakeGame.cpp SnakeGame/snakeGame.h
 bin/ObstaclesGame.o: ObstaclesGame/ObstaclesGame.cpp ObstaclesGame/ObstaclesGame.h
 	mkdir -p bin
 	g++ -g -c -o bin/ObstaclesGame.o ObstaclesGame/ObstaclesGame.cpp $(CFLAGS) 
+
+bin/setting.o: Setting/setting.cpp Setting/setting.h
+	mkdir -p bin
+	g++ -g -c -o bin/setting.o Setting/setting.cpp $(CFLAGS) 
+
 
 
 clean : 
