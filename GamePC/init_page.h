@@ -58,7 +58,7 @@ int init_page() {
             case JOY_DOWN:
                 arrow_position.first += 1; 
                 break; 
-            case BUTTON_WHITE : 
+            case BUTTON_PINK : 
                 result_choosen = true; 
                 result = arrow_position.first + 1; 
                 break; 

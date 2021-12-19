@@ -20,21 +20,28 @@ int main(int argv, char** argc) {
         }
     #endif 
 
-    int init_status = init();
-    int nxt_page_index = 0; 
+    while(1){
+        int init_status = init();
+        int nxt_page_index = 0; 
 
-    if(init_status == 0)
-        nxt_page_index = init_page();
-    if( nxt_page_index == 1 ) {
-        SnakeGame();
-    }
-    if (nxt_page_index == 2) {
-        ObstaclesGame();
-    }
-    if (nxt_page_index == 3) {
-        loadSettingPage(); 
+        if(init_status == 0)
+            nxt_page_index = init_page();
+        if( nxt_page_index == 1 ) {
+            SnakeGame();
+            continue; 
+        }
+        if (nxt_page_index == 2) {
+            ObstaclesGame();
+            continue; 
+        
+        }
+        if (nxt_page_index == 3) {
+            loadSettingPage(); 
+            continue; 
+        
+        }
     }
     close();
-    printf("result is %d\n", nxt_page_index); 
+    // printf("result is %d\n", nxt_page_index); 
     return 0;
 }

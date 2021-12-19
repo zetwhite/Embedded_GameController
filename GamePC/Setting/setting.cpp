@@ -67,6 +67,8 @@ void loadSettingPage( void ) {
                 set_middle = true; 
                 break; 
             case BUTTON_PINK :
+                // send_msg(bluetooth_sock, "S"); 
+                send_msg(bluetooth_sock, to_string(\sensitiveLevel)); 
                 return; 
                 break; 
             default:
@@ -84,6 +86,7 @@ void loadSettingPage( void ) {
                 set_middle = true; 
                 break; 
             case 'q' :
+                send_msg(bluetooth_sock, "S" + to_string(sensitiveLevel)); 
                 return; 
                 break; 
             default:
@@ -99,6 +102,7 @@ void loadSettingPage( void ) {
         refresh();
 
         if(set_middle){
+            send_msg(bluetooth_sock, "M"); 
             string introStr  = "----------------------------";
             string BlanckStr = "                            "; 
             int introLen = introStr.size();
