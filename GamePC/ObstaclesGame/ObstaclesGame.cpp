@@ -30,7 +30,7 @@ bool item_activated = FALSE;
 
 int Game_speed;
 int ObsGame_score;
-int WIDTH;
+int WIDTH; 
 int HEIGHT;
 
 
@@ -98,7 +98,8 @@ void obstcGameInit(void) {
     keypad(obstacleWin, true);
     noecho();
 
-    getmaxyx( obstacleWin, HEIGHT, WIDTH );
+    WIDTH = 50; 
+    HEIGHT= 20; 
     enemy = new Enemy[WIDTH];
 
     int i;
@@ -150,56 +151,32 @@ void drawObstcGameIntro(void) {
 	drawStr(obstacleWin, 16, midx, "       white button : Quit              " );
 }
 
+
 void startObstcGame(void) {
     clearMap(obstacleWin);
     //bIsGameOver = false;
-    Game_speed = 500000;    
+    #ifdef BLUETOOTH_VER
+    Game_speed = 500000;
+    #else 
+    Game_speed = 500;
+    #endif 
+    ObsGame_score = 0;
 
-#ifdef BLUETOOTH_VER 
-    int key = recv_msg(bluetooth_sock)[0]; 
-    
-    switch (key) {
-    case GYRO_LEFT:
-        player.x--;
-        break;
-    case GYRO_RIGHT:
-        player.x++;
-        break;
-    case GYRO_UP:
-        item_activated = TRUE;
-        break;
-    case GYRO_DOWN:
-        item_activated = FALSE;
-        break;
-#else 
-    int key = wgetch(obstacleWin);   
-    
-    switch (key) {
-    case KEY_LEFT:
-        player.x--;
-        break;
-    case KEY_RIGHT:
-        player.x++;
-        break;
-    case KEY_UP:
-        item_activated = TRUE;
-        break;
-    case KEY_DOWN:
-        item_activated = FALSE;
-        break;
-#endif
+    while (true) {
+
         CreateEnemy();
         FallEnemy();
         DelEnemy();
         MovePlayer();
         PrintGame();
-        usleep(Game_speed); 
-        sleep(5);  
+        usleep(Game_speed);
+
         if (DamagedPlayer()) {
             return;
         }
     }
 }
+
 
 //// ���� ���� ó�� ////
 /* �� ���� */

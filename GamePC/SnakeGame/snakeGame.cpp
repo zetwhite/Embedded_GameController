@@ -140,10 +140,11 @@ void startSnakeGame( void ) {
     bIsGameOver = false;
     #ifdef BLUETOOTH_VER
         dir = GYRO_LEFT; 
+        speed = 500000;
     #else 
         dir = KEY_LEFT;
+        speed = 500; 
     #endif
-    speed = 500;
     score = 0;
     length = 3;
     for( int i=0; i<length; i++ ) {
@@ -199,7 +200,6 @@ void startSnakeGame( void ) {
                 break;
             }
         #endif
-        usleep(500000); 
     	moveSnake(dir);
         if( bIsGameOver ) {
             return;
