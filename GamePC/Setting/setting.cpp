@@ -109,7 +109,7 @@ void loadSettingPage( void ) {
             int midx = max_x / 2 - (introLen / 2);
             set_middle = false;
             mvaddstr( max_y/5 *4,      midx, "+--------------------------+");
-            mvaddstr( max_y/5 *4 + 1,  midx, "|     Obstacle Avoiding    |");
+            mvaddstr( max_y/5 *4 + 1,  midx, "|  horizontal axis setted  |");
             mvaddstr( max_y/5 *4 + 2,  midx, "+--------------------------+");
             refresh();
 
