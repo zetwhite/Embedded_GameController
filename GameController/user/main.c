@@ -15,26 +15,31 @@ void ADC_Configure(void);
 void USART1_2_Init(void);
 void NVIC_Configure(void);
 
+void Delay_long(void);
 void Delay(void);
 
 void sendDataUART1(uint16_t data);
 void sendDataUART2(uint16_t data);
+void UpdateSensitivity(void);
 
 // global variables
 uint16_t getx;
 
+uint16_t xSlopeBase = 2255;
+uint16_t ySlopeBase = 2500;
 uint16_t xSlope;
 uint16_t ySlope;
+uint16_t sensitivity = 5;
 
-// xSlope (down ~ up) 2200 ~ 2300
+// xSlope (up ~ down) 2200 ~ 2300
 // base 2255
-uint16_t UP_THRESHOLD = 2300;
-uint16_t DOWN_THRESHOLD = 2200;
+uint16_t DOWN_THRESHOLD;
+uint16_t UP_THRESHOLD;
 
-// ySlope (right ~ left) 2145 ~ 2680
+// ySlope (left ~ right) 2145 ~ 2680
 // base 2420
-uint16_t RIGHT_THRESHOLD = 2200;
-uint16_t LEFT_THRESHOLD = 2600;
+uint16_t LEFT_THRESHOLD;
+uint16_t RIGHT_THRESHOLD;
 
 int color[12] = {
   WHITE,        // 0
@@ -288,10 +293,11 @@ void EXTI0_IRQHandler(void) {
         
 	if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_0)) {
                   USART_SendData(USART2, '0');
-                  printf("JoyStick_4(PB0)\n"); 
+                  printf("JoyStick_4(PE0)\n"); 
 	}
     while (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_0))
         ;
+        Delay_long();
         EXTI_ClearITPendingBit(EXTI_Line0);
 }
 
@@ -304,6 +310,7 @@ void EXTI2_IRQHandler(void) {
 	}
     while (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_2))
         ;
+        Delay_long();
         EXTI_ClearITPendingBit(EXTI_Line2);
 }
 
@@ -316,6 +323,7 @@ void EXTI3_IRQHandler(void) {
 	}
     while(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_3))
             ;
+        Delay_long();
         EXTI_ClearITPendingBit(EXTI_Line3);
 }
 
@@ -329,6 +337,7 @@ void EXTI9_5_IRQHandler(void) {
           }
         while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6))
             ;
+        Delay_long();
           EXTI_ClearITPendingBit(EXTI_Line6);
     }
     // Joystick Left
@@ -338,8 +347,11 @@ void EXTI9_5_IRQHandler(void) {
                   printf("JoyStick_2(PB5)\n"); 
 
           }
+          
           while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5))
             ;
+          
+          Delay_long();
           EXTI_ClearITPendingBit(EXTI_Line5);
     }
     // Joystick Right
@@ -350,6 +362,7 @@ void EXTI9_5_IRQHandler(void) {
           }
           while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9))
             ;
+          Delay_long();
           EXTI_ClearITPendingBit(EXTI_Line9);
     }
 }
@@ -368,12 +381,38 @@ void USART1_IRQHandler() {
 
 void USART2_IRQHandler() {
     uint16_t word;
+    char data[2];
     if(USART_GetITStatus(USART2,USART_IT_RXNE)!= RESET){
     	// the most recent received data by the USART2 peripheral
         word = USART_ReceiveData(USART2);
+        data[0] = ((char*)&word)[0];
+        printf("getData: %d,\n", word);
+        printf("data[0]: %c, %d,\n", data[0], data[0]);
 
-        // TODO implement
-        sendDataUART1(word);
+        // if recv data is M, set horizontal 
+        if( data[0] == 'M' ) {
+          ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_28Cycles5);
+          ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
+          xSlopeBase = xSlope;
+          ADC_ITConfig(ADC1, ADC_IT_EOC, DISABLE);
+          
+          ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 1, ADC_SampleTime_28Cycles5);
+          ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
+          ySlopeBase = ySlope;
+          ADC_ITConfig(ADC1, ADC_IT_EOC, DISABLE);
+          
+          UpdateSensitivity();
+        }
+        // if recv data is digit, update sensitivity
+        else if( '1' <= data[0] && data[0] <= '9' ) {
+          sensitivity = data[0]-'0';
+          UpdateSensitivity();
+        }
+        
+        else {
+          sendDataUART1(word);
+        }
+        
         // clear 'Read data register not empty' flag
     	USART_ClearITPendingBit(USART2,USART_IT_RXNE);
     }
@@ -391,6 +430,12 @@ void ADC1_2_IRQHandler(void){
     //Clear interrupt bit
     ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
   }
+}
+
+void Delay_long(void) {
+	int i;
+
+	for (i = 0; i < 200000; i++) {}
 }
 
 void Delay(void) {
@@ -411,6 +456,14 @@ void sendDataUART2(uint16_t data) {
 	USART_SendData(USART2, data);
 }
 
+void UpdateSensitivity( void )
+{
+  DOWN_THRESHOLD = xSlopeBase + ( 5*sensitivity ) ;
+  UP_THRESHOLD = xSlopeBase - ( 5*sensitivity );
+  LEFT_THRESHOLD = ySlopeBase - ( 25*sensitivity );
+  RIGHT_THRESHOLD = ySlopeBase + ( 25*sensitivity );
+}
+
 int main(void)
 {
     SystemInit();
@@ -421,16 +474,10 @@ int main(void)
     USART2_Init(); 
     EXTI_Configure();   
     NVIC_Configure();
-    /*
-    LCD & printf is for debug
 
-    LCD_Init();
-    LCD_Clear(WHITE);
-
-    LCD_ShowString(0x10, 0x10, "DEBUG", color[3], color[0]);
-    LCD_Fill(0x20, 0x80, 0x30, 0x90,BROWN );
-    */
-
+    char prev_dir = '.';
+    char dir = '.';
+    UpdateSensitivity();
     while (1) {
       // get xSlope from ADC1
       if( getx == 1 ) {
@@ -441,26 +488,15 @@ int main(void)
         ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
         
         // if xSlope value exceeds threshold, send 'U' to bluetooth module
-        if( xSlope > UP_THRESHOLD ) {
-          sendDataUART2('U');
-          printf("UP\n");
-          //LCD_Fill(0x20, 0x70, 0x30, 0x80, RED);
-        }
-        else {
-          //LCD_Fill(0x20, 0x70, 0x30, 0x80, WHITE);
+        if( xSlope < UP_THRESHOLD ) {
+          dir = 'U';
         }
         
         // if xSlope value is less than threshold, send 'D' to bluetooth module
-        if( xSlope < DOWN_THRESHOLD ) {
-          sendDataUART2('D'); 
-          printf("DOWN\n");
-          //LCD_Fill(0x20, 0x90, 0x30, 0xA0, YELLOW);
+        if( xSlope > DOWN_THRESHOLD ) {
+          dir = 'D'; 
         }
-        else {
-          //LCD_Fill(0x20, 0x90, 0x30, 0xA0, WHITE);
-        }
-        //LCD_ShowNum(0x10, 0x40, xSlope, 10, color[3], color[0]);
-        
+
         // done getting slope value, disable interrupt
         ADC_ITConfig(ADC1, ADC_IT_EOC, DISABLE);
         getx = 0;
@@ -473,28 +509,26 @@ int main(void)
         ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
         
         // if ySlope value exceeds threshold, send 'L' to bluetooth module
-        if( ySlope > LEFT_THRESHOLD ) {
-          sendDataUART2('L');
-          printf("LEFT\n");
-          //LCD_Fill(0x10, 0x80, 0x20, 0x90, GREEN);
-        }
-        else {
-          //LCD_Fill(0x10, 0x80, 0x20, 0x90, WHITE);
+        if( ySlope < LEFT_THRESHOLD ) {
+          dir = 'L';
         }
         
         // if ySlope value is less than threshold, send 'R' to bluetooth module
-        if( ySlope < RIGHT_THRESHOLD ) {
-          sendDataUART2('R');
-          printf("RIGHT\n");
-          //LCD_Fill(0x30, 0x80, 0x40, 0x90, BLUE);
+        if( ySlope > RIGHT_THRESHOLD ) {
+          dir = 'R';
         }
-        else {
-          //LCD_Fill(0x30, 0x80, 0x40, 0x90, WHITE);
-        }
-        //LCD_ShowNum(0x10, 0x60, ySlope, 10, color[3], color[0]);
+
         ADC_ITConfig(ADC1, ADC_IT_EOC, DISABLE);
         getx = 1;
-      }  
+      }
+
+      // send direction
+      sendDataUART2(dir);
+      prev_dir = dir;
+      if(dir == 'U') printf("UP\n");
+      if(dir == 'D') printf("DOWN\n");
+      if(dir == 'L') printf("LEFT\n");
+      if(dir == 'R') printf("RIGHT\n");
       Delay();
     }
     return 0;
