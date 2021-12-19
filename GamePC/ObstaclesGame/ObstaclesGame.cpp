@@ -12,7 +12,8 @@
 #include "../util.h"
 #include "../bluetooth.h"
 #include "Positions.h"  
-WINDOW* obstacleWin;
+WINDOW *obstacleWin;
+WINDOW *obsScoreWin;
 extern int bluetooth_sock; 
 
 Enemy *enemy;
@@ -82,23 +83,27 @@ void ObstaclesGame(void) {
 void obstcGameInit(void) {
     int y, x;
     getmaxyx(stdscr, y, x);
-    obstacleWin = newwin(y, x, 0, 0);
+    obstacleWin = newwin( 20, 50,  0, 0 );
+    obsScoreWin = newwin(  3, 50, 20, 0 );
 
-    drawBorder(obstacleWin);
+    wclear( stdscr );
+    touchwin( stdscr );
+    wrefresh( stdscr );
+
+    drawBorder( obstacleWin );
 
     curs_set(0);
     halfdelay(1);
     keypad(obstacleWin, true);
     noecho();
 
-    WIDTH = 50; 
-    HEIGHT= 20; 
-    enemy = new Enemy[WIDTH];
+    WIDTH  = getmaxx( obstacleWin ) - 2; 
+    HEIGHT = getmaxy( obstacleWin ) - 2; 
+    enemy  = new Enemy[WIDTH];
 
     int i;
     for (i = 0; i < WIDTH; i++)
         enemy[i].con = FALSE;
-    //�÷��̾� ��ġ�� �߾�
     player.x = WIDTH / 2;
 }
 
@@ -126,35 +131,34 @@ void drawObstcGameIntro(void) {
 
     getmaxyx(obstacleWin, y, x);
 
-    string introStr = "----------------------------";
-    int introLen = introStr.size();
-    int midx = x / 2 - (introLen / 2);
+    drawStrMid(obstacleWin, 5, "+--------------------------+");
+    drawStrMid(obstacleWin, 6, "|     Obstacle Avoiding    |");
+    drawStrMid(obstacleWin, 7, "+--------------------------+");
 
-    drawStr(obstacleWin, 5, midx, "+--------------------------+");
-    drawStr(obstacleWin, 6, midx, "|     Obstacle Avoiding    |");
-    drawStr(obstacleWin, 7, midx, "+--------------------------+");
+    drawStrMid(obstacleWin, 9, "< PRESS ANY KEY TO START >");
 
-    drawStr(obstacleWin, 9, midx, " < PRESS ANY KEY TO START > ");
+    drawStrMid(obstacleWin, 11, "arrow key : Move");
+    drawStrMid(obstacleWin, 12, "Q : Quit        ");
 
-    drawStr(obstacleWin, 11, midx, "       arrow key : Move      ");
-    drawStr(obstacleWin, 12, midx, "       Q : Quit              ");
-
-	drawStr(obstacleWin, 14, midx, "====== Game Controller Version =====" );
-	drawStr(obstacleWin, 15, midx, "       Gyro Sensor  : Move(Left / Right)" );
-	drawStr(obstacleWin, 16, midx, "       white button : Quit              " );
-    drawStr(obstacleWin, 17, midx, "       pink button  : using Item        " ); 
+	drawStrMid(obstacleWin, 14, "====== Game Controller Version =====" );
+	drawStrMid(obstacleWin, 15, "Gyro Sensor  : Move(Left / Right)" );
+	drawStrMid(obstacleWin, 16, "white button : Quit              " );
+    drawStrMid(obstacleWin, 17, "pink button  : using Item        " ); 
 }
 
 
 void startObstcGame(void) {
     clearMap(obstacleWin);
+    clearMap(obsScoreWin);
     //bIsGameOver = false;
     #ifdef BLUETOOTH_VER
-    Game_speed = 100000;
+    Game_speed = 250000;
     #else 
-    Game_speed = 500;
+    Game_speed = 250000;
     #endif 
     ObsGame_score = 0;
+    updateObsScore();
+
 
     while (true) {
 
@@ -164,6 +168,9 @@ void startObstcGame(void) {
         MovePlayer();
         PrintGame();
         usleep(Game_speed);
+        ObsGame_score += 10;
+        Game_speed -= 500;
+        updateObsScore();
 
         if (DamagedPlayer()) {
             return;
@@ -171,24 +178,19 @@ void startObstcGame(void) {
     }
 }
 
-
-//// ���� ���� ó�� ////
-/* �� ���� */
 void CreateEnemy(void)
 {
     int i;
-    for (i = 0; i < WIDTH; i++)
+    for (i = 1; i < WIDTH; i++)
     {
-        //�ش� �ε���[i]�� ���� ������ (FALSE �̸� ����)
+        
         if (!enemy[i].con)
         {
-            //���� (x��) �������� �� ����, ����(y��)�� ���� ��ġ �׻� ��ġ
     	    //srand((unsigned)time(NULL));           
-            uniform_int_distribution<int> dist(0, WIDTH); 
-            random_device rd1("/dev/urandom"); 
+            uniform_int_distribution<int> dist(1, WIDTH-1); 
+            random_device rd1("/dev/urandom");
             enemy[i].x = dist(rd1); 
             enemy[i].y = HEIGHT - 1;
-            //���� ������ �ε��� [i]�� ���� = TRUE�� ����
             enemy[i].con = TRUE;
             return;
         }
@@ -198,20 +200,19 @@ void CreateEnemy(void)
 void FallEnemy(void)
 {
     int i;
-    for (i = 0; i < WIDTH; i++)
+    for (i = 1; i < WIDTH; i++)
     {
-        //�ش� �ε��� [i]�� ���� ������ (TRUE���) ������ ����
         if (enemy[i].con)
         {
             enemy[i].y--;
         }
     }
 }
-/* ���ϱ� ������ ��(�ٴڿ� ������ ��) ���� */
+
 void DelEnemy(void)
 {
     int i;
-    for (i = 0; i < WIDTH; i++)
+    for (i = 1; i < WIDTH; i++)
     {
         if (enemy[i].con && enemy[i].y < 0)
             enemy[i].con = FALSE;
@@ -222,22 +223,18 @@ void DelEnemy(void)
         }
     }
 }
-/* �÷��̾ ������ ���� ��� (�й�) */
+
 int DamagedPlayer(void)
 {
     int i;
-    for (i = 0; i < WIDTH; i++)
+    for (i = 1; i < WIDTH; i++)
     {
-        //���� ���°� TRUE && ���� ��ġ�� y=0 �� �ٴ� && ���� x�� ��ġ = �÷��̾��� x�� ��ġ
         if ((enemy[i].con && enemy[i].y == 0) && (enemy[i].x == player.x))
             return TRUE;
     }
-    //���� �ʾ����� FALSE ��ȯ
     return FALSE;
 }
 
-//// �÷��̾� ó�� ////
-/* �÷��̾� �̵� (��/��) */
 void MovePlayer(void) {
 #ifdef BLUETOOTH_VER
     int key = recv_msg(bluetooth_sock)[0]; 
@@ -279,10 +276,8 @@ void MovePlayer(void) {
         break;
     }
 
-
-    //��ġ ���� ����
-    if (player.x < 0)
-        player.x = 0;
+    if (player.x < 1)
+        player.x = 1;
     if (player.x > WIDTH - 1)
         player.x = WIDTH - 1;
 }
@@ -292,23 +287,19 @@ void PrintGame(void)
     clearMap(obstacleWin);
 
     int i;
-    for (i = 0; i < WIDTH; i++)
-    {
-        if (enemy[i].con)
-        {
-            //�� ��ġ�� ���� ���
+    for (i = 1; i < WIDTH; i++) {
+        if (enemy[i].con) {
             drawStr(obstacleWin, HEIGHT - enemy[i].y, enemy[i].x, "!");
         }
     }
-    //�÷��̾� ���
+    
     drawStr(obstacleWin, HEIGHT, player.x, "@");
 
     if (item_activated == TRUE) {
         drawStr(obstacleWin, HEIGHT - 1, player.x - 1, "---");
     }
 
-    //�ٴ� ���
-    for (i = 0; i < WIDTH; i++)
+    for (i = 1; i < WIDTH; i++)
         drawStr(obstacleWin, HEIGHT + 1, i, "#");
 }
 
@@ -318,13 +309,14 @@ void drawGameOver(void) {
     clearMap(obstacleWin);
     getmaxyx(obstacleWin, y, x);
 
-    string introStr = "----------------------------";
-    int introLen = introStr.size();
-    int midx = x / 2 - (introLen / 2);
+    drawStrMid(obstacleWin, 5, "+--------------------------+");
+    drawStrMid(obstacleWin, 6, "|         GAME OVER        |");
+    drawStrMid(obstacleWin, 7, "+--------------------------+");
 
-    drawStr(obstacleWin, 5, midx, "+--------------------------+");
-    drawStr(obstacleWin, 6, midx, "|         GAME OVER        |");
-    drawStr(obstacleWin, 7, midx, "+--------------------------+");
+    drawStrMid(obstacleWin, 9, " <  PRESS ANY KEY TO END  > ");
+}
 
-    drawStr(obstacleWin, 9, midx, " <  PRESS ANY KEY TO END  > ");
+void updateObsScore( void ) {
+    string s = "SCORE : " + to_string( ObsGame_score );
+    drawStr( obsScoreWin, 1, 2,  s.c_str() );
 }

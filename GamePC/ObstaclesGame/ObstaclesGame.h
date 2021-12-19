@@ -1,5 +1,5 @@
 // public
-void ObstaclesGame          ( void );
+void ObstaclesGame      ( void );
 
 // private
 void obstcGameInit		( void );
@@ -10,7 +10,7 @@ void endObstaclesGame	( void );
 void CreateEnemy		( void ); 
 void FallEnemy			( void );
 void DelEnemy			( void );
-int	 DamagedPlayer(void);
-
+int	 DamagedPlayer      ( void );
+void updateObsScore     ( void );
 void MovePlayer			( void );
 void PrintGame			( void );
