@@ -42,10 +42,10 @@ void loadSettingPage( void ) {
     mvaddstr(max_y / 2 - 1, bar_x, sensitiveNum.c_str()); 
     mvaddstr(max_y / 2,     bar_x, sensitiveBar.c_str()); 
     mvaddstr(max_y / 2 + 1, bar_x + 4*(sensitiveLevel - 1), senstivieCur.c_str());  
+    // refresh( settingWin );
     refresh(); 
-
-    char in_char; 
-    bool set_middle; 
+    int in_char; 
+    bool set_middle = false; 
 
     while(1){
 #ifdef BLUETOOTH_VER
@@ -66,6 +66,9 @@ void loadSettingPage( void ) {
             case BUTTON_WHITE : 
                 set_middle = true; 
                 break; 
+            case BUTTON_PINK :
+                return; 
+                break; 
             default:
                 break;
         }
@@ -80,28 +83,38 @@ void loadSettingPage( void ) {
             case KEY_DOWN : 
                 set_middle = true; 
                 break; 
+            case 'q' :
+                return; 
+                break; 
             default:
                 break;
         }
 #endif 
-    }
-    if(sensitiveLevel < 0)
-        sensitiveLevel = 1; 
-    if(sensitiveLevel >= 9)
-        sensitiveLevel = 9; 
-    
-    mvaddstr(max_y / 2 + 1, bar_x + 4*(sensitiveLevel - 1), senstivieCur.c_str());  
-    refresh(); 
+        if(sensitiveLevel <= 0)
+            sensitiveLevel = 1; 
+        if(sensitiveLevel >= 9)
+            sensitiveLevel = 9; 
+        
+        mvaddstr(max_y / 2 + 1, bar_x + 4*(sensitiveLevel - 1), senstivieCur.c_str());  
+        refresh();
 
-    if(set_middle){
-        string introStr = "----------------------------";
-        int introLen = introStr.size();
-        int midx = max_x / 2 - (introLen / 2);
-        set_middle = false;
-        drawStr(settingWin, max_y/5 *4,      midx, "+--------------------------+");
-        drawStr(settingWin, max_y/5 *4 + 1,  midx, "|     Obstacle Avoiding    |");
-        drawStr(settingWin, max_y/5 *4 + 2,  midx, "+--------------------------+");
-        sleep(1); 
+        if(set_middle){
+            string introStr  = "----------------------------";
+            string BlanckStr = "                            "; 
+            int introLen = introStr.size();
+            int midx = max_x / 2 - (introLen / 2);
+            set_middle = false;
+            mvaddstr( max_y/5 *4,      midx, "+--------------------------+");
+            mvaddstr( max_y/5 *4 + 1,  midx, "|     Obstacle Avoiding    |");
+            mvaddstr( max_y/5 *4 + 2,  midx, "+--------------------------+");
+            refresh();
+
+            sleep(1); 
+            mvaddstr( max_y/5 *4,      midx, BlanckStr.c_str() );
+            mvaddstr( max_y/5 *4 + 1,  midx, BlanckStr.c_str() );
+            mvaddstr( max_y/5 *4 + 2,  midx, BlanckStr.c_str() );
+            refresh();
+        } 
     }
 }
 
@@ -109,9 +122,10 @@ void loadingPageInit( void ){
     int y, x;
     getmaxyx( stdscr, y, x );
     settingWin = newwin( y, x, 0, 0 );
-    wclear( settingWin );
+    // wclear( settingWin );
     drawBorder( settingWin );
 
+    // refresh(); 
     wrefresh( settingWin );
     curs_set( 0 );
     keypad(settingWin, true); 
