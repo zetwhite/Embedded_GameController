@@ -68,7 +68,7 @@ void loadSettingPage( void ) {
                 break; 
             case BUTTON_PINK :
                 // send_msg(bluetooth_sock, "S"); 
-                send_msg(bluetooth_sock, to_string(\sensitiveLevel)); 
+                send_msg(bluetooth_sock, to_string(sensitiveLevel)); 
                 return; 
                 break; 
             default:
