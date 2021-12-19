@@ -55,8 +55,16 @@ void clearMap( WINDOW *win ) {
     drawBorder( win );
 }
 
-void drawStr( WINDOW *win, int y, int x, const char *s ) {
-    mvwprintw( win, y, x, s );
+void drawStr( WINDOW *win, int y, int x, string s ) {
+    mvwprintw( win, y, x, s.c_str() );
+    touchwin( win );
+    wrefresh( win );
+}
+
+void drawStrMid( WINDOW *win, int y, string s ) {
+    int x;
+    x = getmaxx( win ) / 2 - s.size() / 2;
+    mvwprintw( win, y, x, s.c_str() );
     touchwin( win );
     wrefresh( win );
 }
