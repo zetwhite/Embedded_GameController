@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string>
-#include <sys/socket.h>
+#include <sys/socket.h>   
+#include <fcntl.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
@@ -16,7 +17,9 @@ int connect_board(int& socket_fd, string board_mac){
 
     //allocate socket 
     socket_fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM); 
-   
+    // int flag = fcntl(socket_fd, F_GETFL, 0); 
+    // fcntl( socket_fd, F_SETFL, flag | O_NONBLOCK );
+
     //set connection parameters (who to connect to)
     struct sockaddr_rc addr = {0}; 
     addr.rc_family = AF_BLUETOOTH; 
@@ -26,7 +29,7 @@ int connect_board(int& socket_fd, string board_mac){
     // connect to server
     int status; 
     status = connect(socket_fd, (struct sockaddr *)&addr, sizeof(addr));
-    if(status < 0){
+    if( status < 0){
         perror("fail to connect to board :(\n");
     }
     return status; 
@@ -45,7 +48,8 @@ int send_msg(int& socket_fd, string msg){
 string recv_msg(int& socket_fd){
     char buff[1024]; 
     int cnt; 
-    cnt = read(socket_fd, buff, 1023); 
+    cnt = recv(socket_fd, buff, 1023, MSG_DONTWAIT); 
+    // cnt = read(socket_fd, buff, 1023); 
     buff[cnt] = '\0'; 
     if(cnt == 0)
         return ""; 
