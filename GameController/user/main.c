@@ -290,6 +290,8 @@ void EXTI0_IRQHandler(void) {
                   USART_SendData(USART2, '0');
                   printf("JoyStick_4(PB0)\n"); 
 	}
+    while (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_0))
+        ;
         EXTI_ClearITPendingBit(EXTI_Line0);
 }
 
@@ -300,6 +302,8 @@ void EXTI2_IRQHandler(void) {
                   USART_SendData(USART2, '2');
                   printf("Button1_4(PE2)\n"); 
 	}
+    while (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_2))
+        ;
         EXTI_ClearITPendingBit(EXTI_Line2);
 }
 
@@ -310,6 +314,8 @@ void EXTI3_IRQHandler(void) {
                   USART_SendData(USART2, '3');
                   printf("Button2_4(PE3)\n"); 
 	}
+    while(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_3))
+            ;
         EXTI_ClearITPendingBit(EXTI_Line3);
 }
 
@@ -321,6 +327,8 @@ void EXTI9_5_IRQHandler(void) {
                   USART_SendData(USART2, '6');
                   printf("JoyStick_1(PB6)\n"); 
           }
+        while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6))
+            ;
           EXTI_ClearITPendingBit(EXTI_Line6);
     }
     // Joystick Left
@@ -330,6 +338,8 @@ void EXTI9_5_IRQHandler(void) {
                   printf("JoyStick_2(PB5)\n"); 
 
           }
+          while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5))
+            ;
           EXTI_ClearITPendingBit(EXTI_Line5);
     }
     // Joystick Right
@@ -338,6 +348,8 @@ void EXTI9_5_IRQHandler(void) {
                   USART_SendData(USART2, '9');
                   printf("JoyStick_3(PB9)\n"); 
           }
+          while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9))
+            ;
           EXTI_ClearITPendingBit(EXTI_Line9);
     }
 }
