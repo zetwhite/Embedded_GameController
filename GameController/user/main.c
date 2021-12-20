@@ -391,6 +391,7 @@ void USART2_IRQHandler() {
 
         // if recv data is M, set horizontal 
         if( data[0] == 'M' ) {
+          // get current slope and set slope base
           ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_28Cycles5);
           ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
           xSlopeBase = xSlope;
@@ -401,6 +402,7 @@ void USART2_IRQHandler() {
           ySlopeBase = ySlope;
           ADC_ITConfig(ADC1, ADC_IT_EOC, DISABLE);
           
+          // update sensitivity with updated slope base
           UpdateSensitivity();
         }
         // if recv data is digit, update sensitivity
@@ -408,7 +410,7 @@ void USART2_IRQHandler() {
           sensitivity = data[0]-'0';
           UpdateSensitivity();
         }
-        
+
         else {
           sendDataUART1(word);
         }
