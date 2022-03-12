@@ -4,7 +4,7 @@ We implemented retro games (obstacle avoiding game, snake game) on linux and it'
 
 ### some note
 - Bluetooth communication is used to connect pc(linux) and controller(stm32).
-- For implementing pc console game, we used Cpp language ncurses library.  
+- To implement pc console game, we used Cpp language and ncurses library.  
 - In stm32 board, sensor inputs like button and joystick movement are handled by interrupt handler. 
 - We added a sensitivity level setup page for players. Because required tilt sensitivity is different by each game. 
 <img src="readme_img/화면흐름도.drawio.png"  width="400">
